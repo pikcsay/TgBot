@@ -26,7 +26,6 @@ def get_news(update, context):
         if top_headlines['totalResults'] < 7:
             k = top_headlines['totalResults']
         news = top_headlines['articles']
-        print(top_headlines)
         top_headlines = ['• {}: {}'.format(i['source']['name'], i['title']) for i in news[:k]]
         update.message.reply_text('\n'.join(top_headlines))
 
