@@ -1,10 +1,12 @@
 import requests
+import sqlite3
 from telegram.ext import Updater, MessageHandler, Filters
 from telegram.ext import CallbackContext, CommandHandler
 import wikipedia as wiki
 from newsapi import NewsApiClient
 
 TOKEN = ''
+DB = 'data/bd/db.db'
 wiki.set_lang("en")
 newsapi = NewsApiClient(api_key='bc1e0bf5348f4d1fb1a88bf6d4305ab9')
 
@@ -67,7 +69,20 @@ class Vocabulary:
 
 
 class RegulEng:
-    pass
+    def __init__(self):
+        pass
+
+    def get_regul(self, update, context):
+        con = sqlite3.connect(DB)
+
+        cur = con.cursor()
+        regul = cur.execute("""SELECT path FROM Regulations WHERE name = ?""", (context.args[0],)).fetchone()[0]
+        if regul:
+            context.bot.send_photo(
+                update.message.chat_id,
+                open(regul, 'rb'),
+                caption="Нашёл:"
+            )
 
 
 class SpokenEng:
@@ -79,11 +94,14 @@ if __name__ == '__main__':
 
     dp = updater.dispatcher
 
+    reg = RegulEng()
+
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     # dp.add_handler(CommandHandler("translate", translate))
     dp.add_handler(CommandHandler("wiki", wiki_info))
     dp.add_handler(CommandHandler('news', get_news))
+    dp.add_handler(CommandHandler('reg', reg.get_regul))
 
     updater.start_polling()
 
