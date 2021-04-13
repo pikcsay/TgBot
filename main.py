@@ -2,13 +2,14 @@ import requests
 import sqlite3
 from telegram.ext import Updater, MessageHandler, Filters
 from telegram.ext import CallbackContext, CommandHandler
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import wikipedia as wiki
 from newsapi import NewsApiClient
 
 TOKEN = ''
 DB = 'data/bd/db.db'
 wiki.set_lang("en")
-newsapi = NewsApiClient(api_key='bc1e0bf5348f4d1fb1a88bf6d4305ab9')
+newsapi = NewsApiClient(api_key='')
 
 
 def wiki_info(update, context):
@@ -18,18 +19,23 @@ def wiki_info(update, context):
 
 
 def get_news(update, context):
-    if context.args[0] in ('technology', 'science', 'entertainment', 'general'):
-        category = context.args[0]
-    else:
-        category = 'general'
-    k = 7
+    if not context.args or context.args[0] not in ('technology', 'science', 'entertainment', 'general'):
+        reply_keyboard = [['/news technology', '/news science'],
+                          ['/news entertainment', '/news general']]
+        markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        update.message.reply_text(
+            "Какая тема вас интересует?",
+            reply_markup=markup
+        )
+    category = context.args[0]
+    k = 10
     top_headlines = newsapi.get_top_headlines(category=category, language='en', country='us')
     if top_headlines['status'] == 'ok':
         if top_headlines['totalResults'] < 7:
             k = top_headlines['totalResults']
         news = top_headlines['articles']
         top_headlines = ['• {}: {}'.format(i['source']['name'], i['title']) for i in news[:k]]
-        update.message.reply_text('\n'.join(top_headlines))
+        update.message.reply_text('News:\n' + '\n'.join(top_headlines), reply_markup=ReplyKeyboardRemove())
 
 
 def start(update, context):
