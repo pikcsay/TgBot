@@ -5,11 +5,21 @@ from telegram.ext import CallbackContext, CommandHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import wikipedia as wiki
 from newsapi import NewsApiClient
+from settings import TOKEN, DB, NEWS_KEY
 
-TOKEN = ''
-DB = 'data/bd/db.db'
 wiki.set_lang("en")
-newsapi = NewsApiClient(api_key='')
+newsapi = NewsApiClient(api_key=NEWS_KEY)
+
+
+def start_keyboard(update, context, text, markup):
+    update.message.reply_text(text, reply_markup=markup)
+
+
+def close_keyboard(update, context):
+    update.message.reply_text(
+        "Ok",
+        reply_markup=ReplyKeyboardRemove()
+    )
 
 
 def wiki_info(update, context):
@@ -23,10 +33,7 @@ def get_news(update, context):
         reply_keyboard = [['/news technology', '/news science'],
                           ['/news entertainment', '/news general']]
         markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-        update.message.reply_text(
-            "Какая тема вас интересует?",
-            reply_markup=markup
-        )
+        start_keyboard(update, context, "Какая тема вас интересует?", markup)
     category = context.args[0]
     k = 10
     top_headlines = newsapi.get_top_headlines(category=category, language='en', country='us')
